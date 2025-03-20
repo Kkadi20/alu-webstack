@@ -1,0 +1,30 @@
+global
+    log /dev/log local0
+    log /dev/log local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+    ssl-default-bind-options no-sslv3
+    ssl-default-bind-ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256
+
+defaults
+    log global
+    option httplog
+    option dontlognull
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+
+frontend https_front
+    bind *:443 ssl crt /etc/haproxy/certs/selfsigned.pem
+    mode http
+    default_backend web-backend
+
+backend web-backend
+    mode http
+    server web-01 44.212.59.137:80 check
+    server web-02 54.89.205.127:80 checkvi 1-haproxy_ssl_termination
+
